@@ -66,6 +66,7 @@ const secs = document.querySelectorAll('.section');
 function goTo(n){
   tabs.forEach((t,i)=>{ t.classList.toggle('active',i===n); });
   secs.forEach((s,i)=>{ s.classList.toggle('active',i===n); });
+  if(n===3) buildCuadre();
 }
 
 // ── CALCS ───────────────────────────────────────────
@@ -281,6 +282,7 @@ function buildCuadre(){
 
 function setBadge(id, diff, label){
   const el = document.getElementById(id);
+  if(!el) return;
   el.textContent = label;
   if(Math.abs(diff)===0) { el.className='badge ok'; }
   else if(Math.abs(diff)<=2) { el.className='badge warn'; }
