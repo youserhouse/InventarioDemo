@@ -81,5 +81,4 @@ La validación de ingresos usa un umbral separado sobre `|ingresosReales − ing
 - **Sin módulos**: todo es global. Las funciones se llaman directamente desde atributos `onclick` en el HTML.
 - **Temas CSS**: los colores son variables CSS definidas en los selectores `[data-theme="dark"]` y `[data-theme="light"]`. La variable `--amber` es el color de acento principal.
 - **Severidad de badges**: `.badge.ok` (verde), `.badge.warn` (amarillo), `.badge.bad` (rojo) — se aplican dinámicamente en `buildCuadre` y `setBadge`.
-- **Convención Faltan/Sobran en ingredientes**: `meatDiff = meatConsumed − burgersByMoneyR`. Si `> 0` → "Sobran" (se consumió más de lo vendido, falta registro de venta). Si `< 0` → "Faltan" (el stock no cubre las ventas, falta consumo en inventario).
 - **Valores por defecto**: caja de carne = 72 unidades, caja de pan = 30 unidades, Space Jam = €13,50, Especial = €15,50.

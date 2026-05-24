@@ -188,19 +188,17 @@ function buildCuadre(){
   document.getElementById('r_burgers_money').textContent = burgersByMoneyR;
   document.getElementById('r_total_money').textContent   = '€'+totalRevenue.toFixed(2).replace('.',',');
   document.getElementById('r_diff').textContent          = (diffDisplay > 0 ? '+' : '') + diffDisplay;
-  document.getElementById('r_diff_sub').textContent      = confirmedDiff===0 ? '✓ cuadre perfecto' : confirmedDiff>0 ? 'sobran consumidas, faltan ventas' : 'faltan en inventario, sobran ventas';
+  document.getElementById('r_diff_sub').textContent      = confirmedDiff===0 ? '✓ cuadre perfecto' : confirmedDiff>0 ? 'faltan hamburguesas' : 'hay más stock del esperado';
 
   // texto carne
-  // meatDiff > 0 → se consumió más de lo vendido (sobra consumo, falta venta registrada)
-  // meatDiff < 0 → se consumió menos de lo vendido (el stock no cubre las ventas)
   const meatEl = document.getElementById('r_meat_diff_text');
   const meatBadge = document.getElementById('r_meat_diff_badge');
   if(meatDiff > 0){
-    meatEl.textContent = 'Sobran '+meatDiff+' carne'+(meatDiff!==1?'s':'');
-    meatBadge.className='badge bad'; meatBadge.textContent='+'+meatDiff;
+    meatEl.textContent = 'Faltan '+meatDiff+' carne'+(meatDiff!==1?'s':'');
+    meatBadge.className='badge bad'; meatBadge.textContent='−'+meatDiff;
   } else if(meatDiff < 0){
-    meatEl.textContent = 'Faltan '+Math.abs(meatDiff)+' carne'+(Math.abs(meatDiff)!==1?'s':'');
-    meatBadge.className='badge bad'; meatBadge.textContent='−'+Math.abs(meatDiff);
+    meatEl.textContent = 'Sobran '+Math.abs(meatDiff)+' carne'+(Math.abs(meatDiff)!==1?'s':'');
+    meatBadge.className='badge warn'; meatBadge.textContent='+'+Math.abs(meatDiff);
   } else {
     meatEl.textContent = 'Carne cuadra perfectamente';
     meatBadge.className='badge ok'; meatBadge.textContent='✓';
@@ -210,11 +208,11 @@ function buildCuadre(){
   const breadEl = document.getElementById('r_bread_diff_text');
   const breadBadge = document.getElementById('r_bread_diff_badge');
   if(breadDiff > 0){
-    breadEl.textContent = 'Sobran '+breadDiff+' pan'+(breadDiff!==1?'es':'');
-    breadBadge.className='badge bad'; breadBadge.textContent='+'+breadDiff;
+    breadEl.textContent = 'Faltan '+breadDiff+' pan'+(breadDiff!==1?'es':'');
+    breadBadge.className='badge bad'; breadBadge.textContent='−'+breadDiff;
   } else if(breadDiff < 0){
-    breadEl.textContent = 'Faltan '+Math.abs(breadDiff)+' pan'+(Math.abs(breadDiff)!==1?'es':'');
-    breadBadge.className='badge bad'; breadBadge.textContent='−'+Math.abs(breadDiff);
+    breadEl.textContent = 'Sobran '+Math.abs(breadDiff)+' pan'+(Math.abs(breadDiff)!==1?'es':'');
+    breadBadge.className='badge warn'; breadBadge.textContent='+'+Math.abs(breadDiff);
   } else {
     breadEl.textContent = 'Pan cuadra perfectamente';
     breadBadge.className='badge ok'; breadBadge.textContent='✓';
