@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Demo — Inventario</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     HTML  ·  index.html  (estructura)
+     ═══════════════════════════════════════════ -->
+<header>
+  <div class="logo">
+    <img src="logo.png" style="width:42px;height:42px;border-radius:8px;object-fit:cover;object-position:center;box-shadow:0 0 16px rgba(245,158,11,.25);">
+    <span class="logo-name">Inventario</span>
+    <span class="logo-tag">DEMO</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="header-date" id="headerDate"></span>
+    <button id="themeBtn" onclick="toggleTheme()" style="
+      background:var(--card);border:1px solid var(--border-l);border-radius:8px;
+      padding:7px 12px;cursor:pointer;font-size:14px;transition:all .2s;
+      display:flex;align-items:center;gap:6px;color:var(--muted);
+      font-family:'DM Mono',monospace;font-size:11px;font-weight:500;
+    ">
+      <span id="themeIcon">☀️</span>
+      <span id="themeLabel">Claro</span>
+    </button>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" onclick="goTo(0)"><span class="tab-num">1</span> Apertura</button>
+  <button class="tab" onclick="goTo(1)"><span class="tab-num">2</span> Ventas</button>
+  <button class="tab" onclick="goTo(2)"><span class="tab-num">3</span> Cierre</button>
+  <button class="tab" onclick="goTo(3)"><span class="tab-num">4</span> Cuadre</button>
+  <button class="tab" onclick="goTo(4)"><span class="tab-num">⚙</span> Config</button>
+</nav>
+
+<main>
+
+  <!-- ── APERTURA ── -->
+  <div class="section active" id="s0">
+    <div class="sec-head">
+      <div class="sec-title">Apertura del día</div>
+      <div class="sec-sub">Registra el inventario antes de empezar a vender</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">🥩 Carne</div>
+      <div class="field-row">
+        <div><div class="field-name">Carne</div><div class="field-hint">1 unidad = 1 hamburguesa</div></div>
+        <div class="inp-col"><div class="inp-col-label">Cajas</div><input type="number" id="a_meat_boxes" min="0" placeholder="0" oninput="calc('a')" onchange="calc('a')" onkeyup="calc('a')"></div>
+        <div class="inp-col"><div class="inp-col-label">Sueltas</div><input type="number" id="a_meat_loose" min="0" placeholder="0" oninput="calc('a')" onchange="calc('a')" onkeyup="calc('a')"></div>
+        <div class="inp-col"><div class="inp-col-label">Total</div><div class="total-pill" id="a_meat_total">0 ud</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">🍞 Pan</div>
+      <div class="field-row">
+        <div><div class="field-name">Pan</div><div class="field-hint">1 unidad = 1 hamburguesa</div></div>
+        <div class="inp-col"><div class="inp-col-label">Cajas</div><input type="number" id="a_bread_boxes" min="0" placeholder="0" oninput="calc('a')" onchange="calc('a')" onkeyup="calc('a')"></div>
+        <div class="inp-col"><div class="inp-col-label">Sueltas</div><input type="number" id="a_bread_loose" min="0" placeholder="0" oninput="calc('a')" onchange="calc('a')" onkeyup="calc('a')"></div>
+        <div class="inp-col"><div class="inp-col-label">Total</div><div class="total-pill" id="a_bread_total">0 ud</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">🫙 Salsas</div>
+      <div class="sauce-row">
+        <div><div class="field-name">Salsa Rosa</div><div class="field-hint">botes disponibles</div></div>
+        <div class="inp-col"><div class="inp-col-label">Botes</div><input type="number" id="a_sauce_rosa" min="0" placeholder="0"></div>
+      </div>
+      <div class="sauce-row">
+        <div><div class="field-name">Salsa Blanca</div><div class="field-hint">botes disponibles</div></div>
+        <div class="inp-col"><div class="inp-col-label">Botes</div><input type="number" id="a_sauce_white" min="0" placeholder="0"></div>
+      </div>
+    </div>
+
+    <button class="btn-main" onclick="saveApertura()">Guardar apertura →</button>
+  </div>
+
+  <!-- ── VENTAS ── -->
+  <div class="section" id="s1">
+    <div class="sec-head">
+      <div class="sec-title">Ventas del día</div>
+      <div class="sec-sub">Introduce lo recaudado en tarjeta y efectivo</div>
+    </div>
+
+    <div class="info-note">Precio promedio calculado: <strong>€14,50</strong> (Space Jam €13,50 / Especial €15,50). El cruce usará este promedio para estimar hamburguesas vendidas.</div>
+
+    <div class="card">
+      <div class="card-label">💳 Recaudación</div>
+      <div class="money-row">
+        <label>Tarjeta</label>
+        <div class="money-wrap"><span class="money-sym">€</span><input type="number" id="v_card" min="0" step="0.01" placeholder="0,00" oninput="calcVentas()"></div>
+      </div>
+      <div class="money-row">
+        <label>Efectivo</label>
+        <div class="money-wrap"><span class="money-sym">€</span><input type="number" id="v_cash" min="0" step="0.01" placeholder="0,00" oninput="calcVentas()"></div>
+      </div>
+      <div class="total-bar">
+        <span class="total-bar-label">TOTAL DÍA</span>
+        <span class="total-bar-val" id="v_total">€0,00</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">📊 Estimación</div>
+      <div class="money-row">
+        <label>Hamburguesas estimadas<div class="field-hint">total ÷ €14,50 precio medio</div></label>
+        <div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--amber)" id="v_est_burgers">~0</div>
+      </div>
+    </div>
+
+    <button class="btn-main" onclick="saveVentas()">Guardar ventas →</button>
+  </div>
+
+  <!-- ── CIERRE ── -->
+  <div class="section" id="s2">
+    <div class="sec-head">
+      <div class="sec-title">Cierre del día</div>
+      <div class="sec-sub">Cuenta lo que queda después de las ventas</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">🥩 Carne</div>
+      <div class="field-row">
+        <div><div class="field-name">Carne restante</div></div>
+        <div class="inp-col"><div class="inp-col-label">Cajas</div><input type="number" id="c_meat_boxes" min="0" placeholder="0" oninput="calc('c')" onchange="calc('c')" onkeyup="calc('c')"></div>
+        <div class="inp-col"><div class="inp-col-label">Sueltas</div><input type="number" id="c_meat_loose" min="0" placeholder="0" oninput="calc('c')" onchange="calc('c')" onkeyup="calc('c')"></div>
+        <div class="inp-col"><div class="inp-col-label">Total</div><div class="total-pill" id="c_meat_total">0 ud</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">🍞 Pan</div>
+      <div class="field-row">
+        <div><div class="field-name">Pan restante</div></div>
+        <div class="inp-col"><div class="inp-col-label">Cajas</div><input type="number" id="c_bread_boxes" min="0" placeholder="0" oninput="calc('c')" onchange="calc('c')" onkeyup="calc('c')"></div>
+        <div class="inp-col"><div class="inp-col-label">Sueltas</div><input type="number" id="c_bread_loose" min="0" placeholder="0" oninput="calc('c')" onchange="calc('c')" onkeyup="calc('c')"></div>
+        <div class="inp-col"><div class="inp-col-label">Total</div><div class="total-pill" id="c_bread_total">0 ud</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">🫙 Salsas</div>
+      <div class="sauce-row">
+        <div><div class="field-name">Salsa Rosa restante</div></div>
+        <div class="inp-col"><div class="inp-col-label">Botes</div><input type="number" id="c_sauce_rosa" min="0" placeholder="0"></div>
+      </div>
+      <div class="sauce-row">
+        <div><div class="field-name">Salsa Blanca restante</div></div>
+        <div class="inp-col"><div class="inp-col-label">Botes</div><input type="number" id="c_sauce_white" min="0" placeholder="0"></div>
+      </div>
+    </div>
+
+    <button class="btn-main" onclick="saveCierre()">Ver cuadre →</button>
+  </div>
+
+  <!-- ── CUADRE ── -->
+  <div class="section" id="s3">
+    <div class="sec-head">
+      <div class="sec-title">Cuadre del día</div>
+      <div class="sec-sub">Cruce entre inventario consumido y ventas registradas</div>
+    </div>
+
+    <div id="cuadre_alert"></div>
+
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">🍔 Estimado por ingresos</div>
+        <div class="kpi-value" id="r_burgers_money">—</div>
+        <div class="kpi-sub">Vendidas (€)</div>
+      </div>
+      <div class="kpi kpi-full">
+        <div class="kpi-label">📦 Diferencia de inventario</div>
+        <div class="kpi-ingr-row">
+          <span style="font-size:15px">🥩</span>
+          <span class="kpi-ingr-text" id="r_meat_diff_text">—</span>
+          <div class="badge" id="r_meat_diff_badge">—</div>
+        </div>
+        <div class="kpi-ingr-row">
+          <span style="font-size:15px">🍞</span>
+          <span class="kpi-ingr-text" id="r_bread_diff_text">—</span>
+          <div class="badge" id="r_bread_diff_badge">—</div>
+        </div>
+        <div class="kpi-ingr-row">
+          <img src="salsa-rosa.png" style="width:28px;height:28px;object-fit:cover;border-radius:6px;flex-shrink:0;">
+          <span class="kpi-ingr-text" id="r_rosa_diff_text">—</span>
+          <div class="badge ok" id="r_rosa_badge">—</div>
+        </div>
+        <div class="kpi-ingr-row" style="border-bottom:none">
+          <img src="salsa-blanca.png" style="width:28px;height:28px;object-fit:cover;border-radius:6px;flex-shrink:0;">
+          <span class="kpi-ingr-text" id="r_white_diff_text">—</span>
+          <div class="badge ok" id="r_white_badge">—</div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">💰 Total recaudado</div>
+        <div class="kpi-value" id="r_total_money">—</div>
+        <div class="kpi-sub" id="r_money_sub">tarjeta + efectivo</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">⚠️ Diferencia unidades</div>
+        <div class="kpi-value" id="r_diff">—</div>
+        <div class="kpi-sub" id="r_diff_sub">vendidas vs consumidas</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">💶 Cruce económico</div>
+      <div class="cmp-row">
+        <div class="cmp-name">Ingresos esperados<div class="field-hint" style="font-family:'DM Mono',monospace;font-size:9px">consumidas × €14,50 promedio</div></div>
+        <div class="cmp-vals"><span class="cmp-real" id="r_expected_revenue">—</span></div>
+        <div class="badge" id="r_revenue_badge">—</div>
+      </div>
+      <div class="cmp-row">
+        <div class="cmp-name">Ingresos reales<div class="field-hint" style="font-family:'DM Mono',monospace;font-size:9px">tarjeta + efectivo</div></div>
+        <div class="cmp-vals"><span class="cmp-real" id="r_real_revenue">—</span></div>
+      </div>
+    </div>
+
+    <button class="btn-sec" onclick="resetDay()">🔄 Nuevo día</button>
+  </div>
+
+  <!-- ── CONFIG ── -->
+  <div class="section" id="s4">
+    <div class="sec-head">
+      <div class="sec-title">Configuración</div>
+      <div class="sec-sub">Parámetros del negocio. Se guardan automáticamente.</div>
+    </div>
+
+    <div class="info-note">Estos valores se aplican a todos los cálculos de inventario.</div>
+
+    <div class="card">
+      <div class="card-label">📦 Cajas y unidades</div>
+      <div class="cfg-row">
+        <label><div class="field-name">Unidades por caja de carne</div><div class="field-hint">Por defecto: 72</div></label>
+        <input type="number" id="cfg_meat_box" min="1" value="72" oninput="saveConfig()">
+      </div>
+      <div class="cfg-row">
+        <label><div class="field-name">Unidades por caja de pan</div><div class="field-hint">Por defecto: 30</div></label>
+        <input type="number" id="cfg_bread_box" min="1" value="30" oninput="saveConfig()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">💶 Precios</div>
+      <div class="cfg-row">
+        <label><div class="field-name">Space Jam</div></label>
+        <div class="money-wrap"><span class="money-sym">€</span><input type="number" id="cfg_price_jam" min="0" step="0.50" value="13.50" oninput="saveConfig()"></div>
+      </div>
+      <div class="cfg-row">
+        <label><div class="field-name">Especial</div></label>
+        <div class="money-wrap"><span class="money-sym">€</span><input type="number" id="cfg_price_esp" min="0" step="0.50" value="15.50" oninput="saveConfig()"></div>
+      </div>
+      <div class="cfg-row">
+        <label><div class="field-name">Precio promedio (automático)</div><div class="field-hint">media de los dos precios</div></label>
+        <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--amber)" id="cfg_avg_price">€14,50</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════
+     LÓGICA  ·  app.js
+     ═══════════════════════════════════════════ -->
+
+<script src="app.js"></script>
+</body>
+</html>
