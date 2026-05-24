@@ -54,7 +54,7 @@ finalCarne / finalPan — misma fórmula con los valores de cierre
 
 carneConsumida = initCarne − finalCarne
 panConsumido   = initPan   − finalPan
-hamburguesasPorStock = max(carneConsumida, panConsumido)  // conservador: se usa el mayor
+hamburguesasPorStock = min(carneConsumida, panConsumido)  // solo cuenta hamburguesas completas (ambos ingredientes deben confirmar el déficit)
 
 hamburguesasPorDinero = (tarjeta + efectivo) / precioMedio()  // precioMedio = (priceJam + priceEsp) / 2
 diff = hamburguesasPorStock − round(hamburguesasPorDinero)    // positivo = inventario faltante
