@@ -255,10 +255,6 @@ function buildCuadre(){
     document.getElementById('r_white_badge').textContent='—';
   }
 
-  // meat badge (meatDiff / breadDiff ya declarados arriba)
-  setBadge('r_meat_badge', meatDiff, meatConsumed+' consumidas');
-  setBadge('r_bread_badge', breadDiff, breadConsumed+' consumidas');
-
   // revenue
   document.getElementById('r_expected_revenue').textContent = '€'+expectedRevenue.toFixed(2).replace('.',',');
   document.getElementById('r_real_revenue').textContent     = '€'+totalRevenue.toFixed(2).replace('.',',');
