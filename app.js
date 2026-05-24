@@ -158,7 +158,7 @@ function buildCuadre(){
 
   const meatConsumed  = initMeat  - finalMeat;
   const breadConsumed = initBread - finalBread;
-  const burgersByStock = Math.max(meatConsumed, breadConsumed); // use max (conservative)
+  const burgersByStock = Math.min(meatConsumed, breadConsumed); // ambos ingredientes deben confirmar el déficit
 
   const totalRevenue = (V.card||0) + (V.cash||0);
   const burgersByMoney = totalRevenue / avgPrice();
