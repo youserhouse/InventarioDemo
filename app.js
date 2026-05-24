@@ -158,26 +158,37 @@ function buildCuadre(){
 
   const meatConsumed  = initMeat  - finalMeat;
   const breadConsumed = initBread - finalBread;
-  const burgersByStock = Math.min(meatConsumed, breadConsumed); // ambos ingredientes deben confirmar el déficit
 
   const totalRevenue = (V.card||0) + (V.cash||0);
   const burgersByMoney = totalRevenue / avgPrice();
   const burgersByMoneyR = Math.round(burgersByMoney);
 
-  const diff = burgersByStock - burgersByMoneyR; // positive = more consumed than sold (missing)
-  const diffDisplay = burgersByMoneyR - burgersByStock; // negative = missing burgers (intuitive)
-  const expectedRevenue = burgersByStock * avgPrice();
+  // Diferencia por ingrediente vs lo vendido
+  const meatDiff  = meatConsumed  - burgersByMoneyR; // >0 = más consumidas que vendidas (faltan)
+  const breadDiff = breadConsumed - burgersByMoneyR;
+
+  // Diferencia de hamburguesas COMPLETAS: ambos ingredientes deben coincidir en la misma dirección
+  let confirmedDiff;
+  if (meatDiff > 0 && breadDiff > 0) {
+    confirmedDiff = Math.min(meatDiff, breadDiff); // faltan: el mínimo confirmado por ambos
+  } else if (meatDiff < 0 && breadDiff < 0) {
+    confirmedDiff = Math.max(meatDiff, breadDiff); // sobran: el mínimo confirmado por ambos
+  } else {
+    confirmedDiff = 0; // señales contradictorias → sin hamburguesas completas faltantes
+  }
+
+  const diffDisplay = -confirmedDiff; // negativo = faltan, positivo = sobran
+
+  // Ingresos esperados basados en hamburguesas completas físicamente consumidas
+  const completeBurgers = Math.min(meatConsumed, breadConsumed);
+  const expectedRevenue = completeBurgers * avgPrice();
   const revenueDiff = totalRevenue - expectedRevenue;
 
   // ── fill KPIs ──
   document.getElementById('r_burgers_money').textContent = burgersByMoneyR;
   document.getElementById('r_total_money').textContent   = '€'+totalRevenue.toFixed(2).replace('.',',');
   document.getElementById('r_diff').textContent          = (diffDisplay > 0 ? '+' : '') + diffDisplay;
-  document.getElementById('r_diff_sub').textContent      = diff===0 ? '✓ cuadre perfecto' : diff>0 ? 'faltan hamburguesas' : 'hay más stock del esperado';
-
-  // ── diferencia de inventario: desglose por ingrediente ──
-  const meatDiff  = meatConsumed  - burgersByMoneyR; // >0 = más consumidas que vendidas
-  const breadDiff = breadConsumed - burgersByMoneyR;
+  document.getElementById('r_diff_sub').textContent      = confirmedDiff===0 ? '✓ cuadre perfecto' : confirmedDiff>0 ? 'faltan hamburguesas' : 'hay más stock del esperado';
 
   // texto carne
   const meatEl = document.getElementById('r_meat_diff_text');
@@ -258,17 +269,17 @@ function buildCuadre(){
   else{ rb.className='badge bad'; rb.textContent='± €'+absDiff.toFixed(2).replace('.',','); }
 
   // ── main alert ──
-  if(diff === 0){
+  if(confirmedDiff === 0){
     showAlert('ok','✓ Todo cuadra','El inventario consumido coincide con las ventas registradas. Sin anomalías detectadas.');
-  } else if(diff > 0 && diff <= 2){
+  } else if(confirmedDiff > 0 && confirmedDiff <= 2){
     showAlert('warn','⚠ Diferencia pequeña',
-      diff+' hamburguesa(s) consumidas sin ingreso registrado. Puede ser un error de precio (Space Jam vs Especial) o una cortesía. Revisar.');
-  } else if(diff > 2){
+      confirmedDiff+' hamburguesa(s) consumidas sin ingreso registrado. Puede ser un error de precio (Space Jam vs Especial) o una cortesía. Revisar.');
+  } else if(confirmedDiff > 2){
     showAlert('danger','🚨 Alerta de inventario',
-      diff+' hamburguesas consumidas que no aparecen en ventas. Revisar urgentemente.');
+      confirmedDiff+' hamburguesas consumidas que no aparecen en ventas. Revisar urgentemente.');
   } else {
     showAlert('warn','📊 Diferencia inversa',
-      Math.abs(diff)+' hamburgesas cobradas más de las que refleja el stock. Posible error al contar inventario o ventas duplicadas.');
+      Math.abs(confirmedDiff)+' hamburguesas cobradas más de las que refleja el stock. Posible error al contar inventario o ventas duplicadas.');
   }
 }
 
