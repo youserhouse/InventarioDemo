@@ -1,8 +1,8 @@
 // ── SUPABASE ─────────────────────────────────────────
 // IMPORTANTE: sustituye estas dos líneas con los valores de tu proyecto
 // supabase.com → Settings → API → Project URL + anon public key
-const SUPA_URL = 'TU_SUPABASE_URL';       // ej: https://abcxyz.supabase.co
-const SUPA_KEY = 'TU_SUPABASE_ANON_KEY';  // clave "anon public"
+const SUPA_URL = 'https://rjwylmoclygjchjypdpu.supabase.co';
+const SUPA_KEY = 'sb_publishable_46KfxJ93pHFFbxwQ0dWmOg_E_A1KkZ1';
 
 let supa = null;
 try {
