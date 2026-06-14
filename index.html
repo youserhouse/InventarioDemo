@@ -6,6 +6,7 @@
 <title>La Demo — Inventario</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -15,8 +16,13 @@
 <header>
   <div class="logo">
     <img src="logo.png" style="width:42px;height:42px;border-radius:8px;object-fit:cover;object-position:center;box-shadow:0 0 16px rgba(245,158,11,.25);">
-    <span class="logo-name">Inventario</span>
-    <span class="logo-tag">DEMO</span>
+    <div class="logo-text">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="logo-name">Inventario</span>
+        <span class="logo-tag">DEMO</span>
+      </div>
+      <span class="evento-tag" id="headerEvento" style="display:none"></span>
+    </div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
     <span class="header-date" id="headerDate"></span>
@@ -38,6 +44,7 @@
   <button class="tab" onclick="goTo(2)"><span class="tab-num">3</span> Cierre</button>
   <button class="tab" onclick="goTo(3)"><span class="tab-num">4</span> Cuadre</button>
   <button class="tab" onclick="goTo(4)"><span class="tab-num">⚙</span> Config</button>
+  <button class="tab" onclick="goTo(5)"><span class="tab-num">📋</span> Historial</button>
 </nav>
 
 <main>
@@ -225,6 +232,7 @@
       </div>
     </div>
 
+    <button class="btn-save-db" id="btnGuardarJornada" onclick="saveToSupabase()">💾 Guardar jornada en historial</button>
     <button class="btn-sec" onclick="resetDay()">🔄 Nuevo día</button>
   </div>
 
@@ -250,6 +258,14 @@
     </div>
 
     <div class="card">
+      <div class="card-label">🎪 Evento / Jornada</div>
+      <div class="cfg-row">
+        <label><div class="field-name">Nombre del evento</div><div class="field-hint">Aparece en el encabezado y se guarda en el historial</div></label>
+        <input type="text" id="cfg_evento" placeholder="Ej: Feria de Primavera" oninput="saveEvento()">
+      </div>
+    </div>
+
+    <div class="card">
       <div class="card-label">💶 Precios</div>
       <div class="cfg-row">
         <label><div class="field-name">Space Jam</div></label>
@@ -266,11 +282,18 @@
     </div>
   </div>
 
-</main>
+  <!-- ── HISTORIAL ── -->
+  <div class="section" id="s5">
+    <div class="sec-head">
+      <div class="sec-title">Historial</div>
+      <div class="sec-sub">Jornadas guardadas en la base de datos</div>
+    </div>
+    <div id="hist_content">
+      <div class="hist-loading">Selecciona esta pestaña para cargar el historial.</div>
+    </div>
+  </div>
 
-<!-- ═══════════════════════════════════════════
-     LÓGICA  ·  app.js
-     ═══════════════════════════════════════════ -->
+</main>
 
 <script src="app.js"></script>
 </body>

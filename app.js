@@ -1,3 +1,16 @@
+// ── SUPABASE ─────────────────────────────────────────
+// IMPORTANTE: sustituye estas dos líneas con los valores de tu proyecto
+// supabase.com → Settings → API → Project URL + anon public key
+const SUPA_URL = 'TU_SUPABASE_URL';       // ej: https://abcxyz.supabase.co
+const SUPA_KEY = 'TU_SUPABASE_ANON_KEY';  // clave "anon public"
+
+let supa = null;
+try {
+  if(typeof supabase !== 'undefined' && SUPA_URL !== 'TU_SUPABASE_URL'){
+    supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+  }
+} catch(e){ console.warn('Supabase no inicializado:', e); }
+
 // ── THEME ────────────────────────────────────────────
 function applyTheme(theme){
   document.documentElement.setAttribute('data-theme', theme);
@@ -25,7 +38,6 @@ function loadConfig(){
   if(s){
     const parsed = JSON.parse(s);
     CFG = {...CFG,...parsed};
-    // Guard: box sizes can never be 0 or negative
     if(!CFG.meatBox  || CFG.meatBox  < 1) CFG.meatBox  = 72;
     if(!CFG.breadBox || CFG.breadBox < 1) CFG.breadBox = 30;
   }
@@ -52,6 +64,25 @@ function updateAvgPrice(){
 
 function avgPrice(){ return (CFG.priceJam + CFG.priceEsp) / 2; }
 
+// ── EVENTO ──────────────────────────────────────────
+function loadEvento(){
+  const ev = localStorage.getItem('ic_evento') || '';
+  document.getElementById('cfg_evento').value = ev;
+  updateHeaderEvento(ev);
+}
+
+function saveEvento(){
+  const ev = document.getElementById('cfg_evento').value.trim();
+  localStorage.setItem('ic_evento', ev);
+  updateHeaderEvento(ev);
+}
+
+function updateHeaderEvento(ev){
+  const el = document.getElementById('headerEvento');
+  if(ev){ el.textContent = ev; el.style.display = ''; }
+  else { el.textContent = ''; el.style.display = 'none'; }
+}
+
 // ── DATE ────────────────────────────────────────────
 function setDate(){
   const d = new Date();
@@ -67,11 +98,11 @@ function goTo(n){
   tabs.forEach((t,i)=>{ t.classList.toggle('active',i===n); });
   secs.forEach((s,i)=>{ s.classList.toggle('active',i===n); });
   if(n===3) buildCuadre();
+  if(n===5) loadHistorial();
 }
 
 // ── CALCS ───────────────────────────────────────────
 function calc(prefix){
-  // Read box sizes directly from config inputs — no CFG dependency
   var meatPerBox  = parseInt(document.getElementById('cfg_meat_box').value,10);
   var breadPerBox = parseInt(document.getElementById('cfg_bread_box').value,10);
   if(!meatPerBox  || meatPerBox  < 1) meatPerBox  = 72;
@@ -145,6 +176,8 @@ function saveCierre(){
 }
 
 // ── CUADRE ──────────────────────────────────────────
+let cuadreData = null;
+
 function buildCuadre(){
   const A = JSON.parse(localStorage.getItem('ic_apertura')||'{}');
   const V = JSON.parse(localStorage.getItem('ic_ventas')||'{}');
@@ -164,26 +197,47 @@ function buildCuadre(){
   const burgersByMoney = totalRevenue / avgPrice();
   const burgersByMoneyR = Math.round(burgersByMoney);
 
-  // Diferencia por ingrediente vs lo vendido
-  const meatDiff  = meatConsumed  - burgersByMoneyR; // >0 = más consumidas que vendidas (faltan)
+  const meatDiff  = meatConsumed  - burgersByMoneyR;
   const breadDiff = breadConsumed - burgersByMoneyR;
 
-  // Diferencia de hamburguesas COMPLETAS: ambos ingredientes deben coincidir en la misma dirección
   let confirmedDiff;
   if (meatDiff > 0 && breadDiff > 0) {
-    confirmedDiff = Math.min(meatDiff, breadDiff); // faltan: el mínimo confirmado por ambos
+    confirmedDiff = Math.min(meatDiff, breadDiff);
   } else if (meatDiff < 0 && breadDiff < 0) {
-    confirmedDiff = Math.max(meatDiff, breadDiff); // sobran: el mínimo confirmado por ambos
+    confirmedDiff = Math.max(meatDiff, breadDiff);
   } else {
-    confirmedDiff = 0; // señales contradictorias → sin hamburguesas completas faltantes
+    confirmedDiff = 0;
   }
 
-  const diffDisplay = -confirmedDiff; // negativo = faltan, positivo = sobran
-
-  // Ingresos esperados basados en hamburguesas completas físicamente consumidas
+  const diffDisplay = -confirmedDiff;
   const completeBurgers = Math.min(meatConsumed, breadConsumed);
   const expectedRevenue = completeBurgers * avgPrice();
   const revenueDiff = totalRevenue - expectedRevenue;
+
+  const rosaDiff  = (A.sauce_rosa||0)  - (C.sauce_rosa||0);
+  const whiteDiff = (A.sauce_white||0) - (C.sauce_white||0);
+
+  // Guardar datos calculados para Supabase
+  cuadreData = {
+    burgers_by_money: burgersByMoneyR,
+    complete_burgers: completeBurgers,
+    meat_consumed: meatConsumed,
+    bread_consumed: breadConsumed,
+    meat_diff: meatDiff,
+    bread_diff: breadDiff,
+    confirmed_diff: confirmedDiff,
+    total_revenue: totalRevenue,
+    expected_revenue: expectedRevenue,
+    revenue_diff: revenueDiff,
+    rosa_diff: rosaDiff,
+    white_diff: whiteDiff,
+  };
+
+  // Restaurar botón guardar
+  const btn = document.getElementById('btnGuardarJornada');
+  if(btn && !btn.classList.contains('btn-save-db--saved')){
+    btn.textContent='💾 Guardar jornada en historial'; btn.disabled=false; btn.className='btn-save-db';
+  }
 
   // ── fill KPIs ──
   document.getElementById('r_burgers_money').textContent = burgersByMoneyR;
@@ -191,7 +245,6 @@ function buildCuadre(){
   document.getElementById('r_diff').textContent          = (diffDisplay > 0 ? '+' : '') + diffDisplay;
   document.getElementById('r_diff_sub').textContent      = confirmedDiff===0 ? '✓ cuadre perfecto' : confirmedDiff>0 ? 'faltan hamburguesas' : 'hay más stock del esperado';
 
-  // texto carne
   const meatEl = document.getElementById('r_meat_diff_text');
   const meatBadge = document.getElementById('r_meat_diff_badge');
   if(meatDiff > 0){
@@ -205,7 +258,6 @@ function buildCuadre(){
     meatBadge.className='badge ok'; meatBadge.textContent='✓';
   }
 
-  // texto pan
   const breadEl = document.getElementById('r_bread_diff_text');
   const breadBadge = document.getElementById('r_bread_diff_badge');
   if(breadDiff > 0){
@@ -218,12 +270,6 @@ function buildCuadre(){
     breadEl.textContent = 'Pan cuadra perfectamente';
     breadBadge.className='badge ok'; breadBadge.textContent='✓';
   }
-
-
-
-  // ── salsas (dentro de diferencia de inventario) ──
-  var rosaDiff  = (A.sauce_rosa||0)  - (C.sauce_rosa||0);
-  var whiteDiff = (A.sauce_white||0) - (C.sauce_white||0);
 
   var rosaEl  = document.getElementById('r_rosa_diff_text');
   var whiteEl = document.getElementById('r_white_diff_text');
@@ -256,7 +302,6 @@ function buildCuadre(){
     document.getElementById('r_white_badge').textContent='—';
   }
 
-  // revenue
   document.getElementById('r_expected_revenue').textContent = '€'+expectedRevenue.toFixed(2).replace('.',',');
   document.getElementById('r_real_revenue').textContent     = '€'+totalRevenue.toFixed(2).replace('.',',');
   const rb = document.getElementById('r_revenue_badge');
@@ -265,7 +310,6 @@ function buildCuadre(){
   else if(absDiff < 15){ rb.className='badge warn'; rb.textContent='± €'+absDiff.toFixed(2).replace('.',','); }
   else{ rb.className='badge bad'; rb.textContent='± €'+absDiff.toFixed(2).replace('.',','); }
 
-  // ── main alert ──
   if(confirmedDiff === 0){
     showAlert('ok','✓ Todo cuadra','El inventario consumido coincide con las ventas registradas. Sin anomalías detectadas.');
   } else if(confirmedDiff > 0 && confirmedDiff <= 2){
@@ -278,6 +322,145 @@ function buildCuadre(){
     showAlert('warn','📊 Diferencia inversa',
       Math.abs(confirmedDiff)+' hamburguesas cobradas más de las que refleja el stock. Posible error al contar inventario o ventas duplicadas.');
   }
+}
+
+// ── GUARDAR EN SUPABASE ──────────────────────────────
+async function saveToSupabase(){
+  if(!cuadreData){ alert('Primero completa el cuadre del día.'); return; }
+  if(!supa){
+    alert('Supabase no está configurado. Añade tu URL y anon key en app.js (líneas 5-6).');
+    return;
+  }
+  const btn = document.getElementById('btnGuardarJornada');
+  btn.textContent = '⏳ Guardando…'; btn.disabled = true;
+
+  const fecha = new Date().toISOString().slice(0,10);
+  const evento = localStorage.getItem('ic_evento') || '';
+
+  const { error } = await supa.from('registros').insert({
+    fecha,
+    evento,
+    apertura: JSON.parse(localStorage.getItem('ic_apertura')||'{}'),
+    ventas:   JSON.parse(localStorage.getItem('ic_ventas')||'{}'),
+    cierre:   JSON.parse(localStorage.getItem('ic_cierre')||'{}'),
+    cuadre:   cuadreData,
+    config:   {...CFG},
+  });
+
+  if(error){
+    btn.textContent = '❌ Error — reintentar';
+    btn.disabled = false;
+    btn.className = 'btn-save-db btn-save-db--error';
+    console.error('Supabase error:', error);
+  } else {
+    btn.textContent = '✓ Jornada guardada';
+    btn.disabled = true;
+    btn.className = 'btn-save-db btn-save-db--saved';
+  }
+}
+
+// ── HISTORIAL ────────────────────────────────────────
+async function loadHistorial(){
+  const container = document.getElementById('hist_content');
+  if(!supa){
+    container.innerHTML = `<div class="hist-error">Supabase no configurado.<br><span style="font-size:10px;opacity:.6">Añade tu URL y anon key en app.js (líneas 5-6) y vuelve a publicar.</span></div>`;
+    return;
+  }
+  container.innerHTML = '<div class="hist-loading">Cargando historial…</div>';
+
+  const { data, error } = await supa
+    .from('registros')
+    .select('*')
+    .order('fecha', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(60);
+
+  if(error){
+    container.innerHTML = `<div class="hist-error">No se pudo cargar el historial.<br><span style="font-size:10px;opacity:.6">${error.message}</span></div>`;
+    return;
+  }
+
+  if(!data || data.length === 0){
+    container.innerHTML = '<div class="hist-empty">Todavía no hay jornadas guardadas.<br>Completa el cuadre y pulsa "Guardar jornada".</div>';
+    return;
+  }
+
+  container.innerHTML = data.map((r,i) => {
+    const Q = r.cuadre || {};
+    const diff = Q.confirmed_diff || 0;
+    const status = diff === 0 ? 'ok' : (Math.abs(diff) <= 2 ? 'warn' : 'bad');
+    const statusLabel = diff === 0 ? '✓ Cuadra' : (diff > 0 ? `−${diff} uds` : `+${Math.abs(diff)} uds`);
+    const total = Q.total_revenue !== undefined ? '€'+Number(Q.total_revenue).toFixed(2).replace('.',',') : '—';
+    const burgers = Q.burgers_by_money !== undefined ? Q.burgers_by_money : '—';
+    const fechaFmt = r.fecha
+      ? new Date(r.fecha+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase()
+      : '—';
+    return `
+      <div class="hist-item">
+        <div class="hist-item-header" onclick="toggleHistDetail(this)">
+          <div class="hist-item-left">
+            <div class="hist-fecha">${fechaFmt}</div>
+            <div class="hist-evento">${r.evento || '<span style="opacity:.4">Sin nombre</span>'}</div>
+          </div>
+          <div class="hist-item-right">
+            <div class="hist-kpi"><span class="hist-kpi-val">${total}</span><span class="hist-kpi-label">recaudado</span></div>
+            <div class="hist-kpi"><span class="hist-kpi-val">${burgers}</span><span class="hist-kpi-label">burgers</span></div>
+            <div class="badge ${status}">${statusLabel}</div>
+            <span class="hist-chevron">▸</span>
+          </div>
+        </div>
+        <div class="hist-detail" style="display:none">
+          ${buildHistDetail(r)}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleHistDetail(header){
+  const detail = header.nextElementSibling;
+  const chevron = header.querySelector('.hist-chevron');
+  const open = detail.style.display !== 'none';
+  detail.style.display = open ? 'none' : 'block';
+  chevron.textContent = open ? '▸' : '▾';
+}
+
+function buildHistDetail(r){
+  const A = r.apertura || {};
+  const V = r.ventas   || {};
+  const C = r.cierre   || {};
+  const Q = r.cuadre   || {};
+  const fmt = v => (v !== undefined && v !== null) ? v : '—';
+  const eur = v => (v !== undefined && v !== null) ? '€'+Number(v).toFixed(2).replace('.',',') : '—';
+  return `
+    <div class="hist-detail-grid">
+      <div class="hist-detail-block">
+        <div class="hist-detail-title">🟡 Apertura</div>
+        <div class="hist-detail-row"><span>Carne</span><span>${fmt(A.meat_boxes)} caj + ${fmt(A.meat_loose)} suel</span></div>
+        <div class="hist-detail-row"><span>Pan</span><span>${fmt(A.bread_boxes)} caj + ${fmt(A.bread_loose)} suel</span></div>
+        <div class="hist-detail-row"><span>Salsa Rosa</span><span>${fmt(A.sauce_rosa)} botes</span></div>
+        <div class="hist-detail-row"><span>Salsa Blanca</span><span>${fmt(A.sauce_white)} botes</span></div>
+      </div>
+      <div class="hist-detail-block">
+        <div class="hist-detail-title">🔵 Cierre</div>
+        <div class="hist-detail-row"><span>Carne</span><span>${fmt(C.meat_boxes)} caj + ${fmt(C.meat_loose)} suel</span></div>
+        <div class="hist-detail-row"><span>Pan</span><span>${fmt(C.bread_boxes)} caj + ${fmt(C.bread_loose)} suel</span></div>
+        <div class="hist-detail-row"><span>Salsa Rosa</span><span>${fmt(C.sauce_rosa)} botes</span></div>
+        <div class="hist-detail-row"><span>Salsa Blanca</span><span>${fmt(C.sauce_white)} botes</span></div>
+      </div>
+      <div class="hist-detail-block">
+        <div class="hist-detail-title">💳 Ventas</div>
+        <div class="hist-detail-row"><span>Tarjeta</span><span>${eur(V.card)}</span></div>
+        <div class="hist-detail-row"><span>Efectivo</span><span>${eur(V.cash)}</span></div>
+        <div class="hist-detail-row"><span>Total</span><span>${eur((V.card||0)+(V.cash||0))}</span></div>
+      </div>
+      <div class="hist-detail-block">
+        <div class="hist-detail-title">📊 Cuadre</div>
+        <div class="hist-detail-row"><span>Burgers vendidas</span><span>${fmt(Q.burgers_by_money)}</span></div>
+        <div class="hist-detail-row"><span>Burgers consumidas</span><span>${fmt(Q.complete_burgers)}</span></div>
+        <div class="hist-detail-row"><span>Ingr. esperados</span><span>${eur(Q.expected_revenue)}</span></div>
+        <div class="hist-detail-row"><span>Diferencia €</span><span>${eur(Q.revenue_diff)}</span></div>
+      </div>
+    </div>`;
 }
 
 function setBadge(id, diff, label){
@@ -298,6 +481,7 @@ function showAlert(type, title, body){
 function resetDay(){
   if(!confirm('¿Iniciar un nuevo día? Se borrarán los datos de hoy.')) return;
   ['ic_apertura','ic_ventas','ic_cierre'].forEach(k=>localStorage.removeItem(k));
+  cuadreData = null;
   ['a_meat_boxes','a_meat_loose','a_bread_boxes','a_bread_loose','a_sauce_rosa','a_sauce_white',
    'c_meat_boxes','c_meat_loose','c_bread_boxes','c_bread_loose','c_sauce_rosa','c_sauce_white',
    'v_card','v_cash'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
@@ -308,21 +492,22 @@ function resetDay(){
   document.getElementById('c_meat_total').textContent='0 ud';
   document.getElementById('c_bread_total').textContent='0 ud';
   document.getElementById('cuadre_alert').innerHTML='';
+  const btn = document.getElementById('btnGuardarJornada');
+  if(btn){ btn.textContent='💾 Guardar jornada en historial'; btn.disabled=false; btn.className='btn-save-db'; }
   tabs.forEach((t,i)=>{t.classList.remove('done','active');if(i===0)t.classList.add('active');});
   goTo(0);
 }
 
 // ── INIT ────────────────────────────────────────────
-// Reset corrupted config if box sizes are invalid
 (function(){
   const s = localStorage.getItem('ic_config');
   if(s){ try{ const p=JSON.parse(s); if(!p.meatBox||p.meatBox<1||!p.breadBox||p.breadBox<1){ localStorage.removeItem('ic_config'); } }catch(e){ localStorage.removeItem('ic_config'); } }
 })();
 loadTheme();
 loadConfig();
+loadEvento();
 setDate();
 
-// Extra safety: bind calc via addEventListener in case oninput doesn't fire on this browser
 ['a_meat_boxes','a_meat_loose','a_bread_boxes','a_bread_loose'].forEach(function(id){
   var el = document.getElementById(id);
   if(el){
