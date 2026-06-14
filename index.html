@@ -10,10 +10,45 @@
 </head>
 <body>
 
+<!-- ── PANTALLA LOGIN ── -->
+<div id="screen-login">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="logo.png" style="width:64px;height:64px;border-radius:12px;object-fit:cover;object-position:center;box-shadow:0 0 24px rgba(245,158,11,.35);">
+      <div>
+        <div class="login-title">Inventario</div>
+        <span class="logo-tag">DEMO</span>
+      </div>
+    </div>
+    <div class="login-fields">
+      <div class="login-field">
+        <label class="login-label">Correo</label>
+        <input type="email" id="login_email" placeholder="tu@correo.com" onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Contraseña</label>
+        <input type="password" id="login_pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <div id="login_error" class="login-error"></div>
+      <button class="btn-main" id="login_btn" onclick="login()">Iniciar sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PANTALLA SPLASH ── -->
+<div id="screen-splash" style="display:none">
+  <div class="splash-content">
+    <img src="logo.png" class="splash-logo">
+    <div class="splash-name">Inventario</div>
+    <span class="logo-tag">DEMO</span>
+    <div class="splash-bar"><div class="splash-fill"></div></div>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════════════
      HTML  ·  index.html  (estructura)
      ═══════════════════════════════════════════ -->
-<header>
+<header style="display:none">
   <div class="logo">
     <img src="logo.png" style="width:42px;height:42px;border-radius:8px;object-fit:cover;object-position:center;box-shadow:0 0 16px rgba(245,158,11,.25);">
     <div class="logo-text">
@@ -35,10 +70,15 @@
       <span id="themeIcon">☀️</span>
       <span id="themeLabel">Claro</span>
     </button>
+    <button onclick="logout()" title="Cerrar sesión" style="
+      background:var(--card);border:1px solid var(--border-l);border-radius:8px;
+      padding:7px 10px;cursor:pointer;transition:all .2s;color:var(--muted);
+      font-size:15px;display:flex;align-items:center;
+    ">🚪</button>
   </div>
 </header>
 
-<nav>
+<nav style="display:none">
   <button class="tab active" onclick="goTo(0)"><span class="tab-num">1</span> Apertura</button>
   <button class="tab" onclick="goTo(1)"><span class="tab-num">2</span> Ventas</button>
   <button class="tab" onclick="goTo(2)"><span class="tab-num">3</span> Cierre</button>
@@ -47,7 +87,7 @@
   <button class="tab" onclick="goTo(5)"><span class="tab-num">📋</span> Historial</button>
 </nav>
 
-<main>
+<main style="display:none">
 
   <!-- ── APERTURA ── -->
   <div class="section active" id="s0">

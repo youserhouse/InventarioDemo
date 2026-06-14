@@ -26,6 +26,51 @@
 
 body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
 
+/* ── LOGIN SCREEN ── */
+#screen-login{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:20px;background:var(--bg);animation:fadeIn .3s ease;
+}
+.login-card{
+  width:100%;max-width:340px;background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:32px 28px;
+}
+.login-logo{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.login-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;line-height:1}
+.login-fields{display:flex;flex-direction:column;gap:14px}
+.login-field{display:flex;flex-direction:column;gap:6px}
+.login-label{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.login-field input{
+  padding:10px 12px;background:var(--input-bg);border:1px solid var(--border-l);
+  border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;
+  outline:none;transition:border-color .15s,background .3s;width:100%;
+}
+.login-field input:focus{border-color:var(--amber)}
+.login-field input::placeholder{color:var(--faint)}
+.login-error{font-family:'DM Mono',monospace;font-size:11px;color:var(--red);min-height:16px}
+#screen-login .btn-main{margin-top:4px}
+
+/* ── SPLASH SCREEN ── */
+#screen-splash{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;background:var(--bg);animation:fadeIn .3s ease;
+}
+.splash-content{display:flex;flex-direction:column;align-items:center;gap:14px}
+.splash-logo{
+  width:96px;height:96px;border-radius:18px;object-fit:cover;object-position:center;
+  box-shadow:0 0 40px rgba(245,158,11,.4);animation:splashPulse 1.1s ease-in-out infinite alternate;
+}
+.splash-name{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:6px;line-height:1}
+.splash-bar{
+  width:160px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:10px;
+}
+.splash-fill{
+  height:100%;background:var(--amber);border-radius:2px;
+  animation:splashLoad 2.1s ease-out forwards;
+}
+@keyframes splashPulse{from{box-shadow:0 0 24px rgba(245,158,11,.3)}to{box-shadow:0 0 48px rgba(245,158,11,.55)}}
+@keyframes splashLoad{from{width:0}to{width:100%}}
+
 /* ── HEADER ── */
 header{
   display:flex;align-items:center;justify-content:space-between;

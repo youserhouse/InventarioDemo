@@ -11,6 +11,56 @@ try {
   }
 } catch(e){ console.warn('Supabase no inicializado:', e); }
 
+// ── AUTH ─────────────────────────────────────────────
+async function checkAuth(){
+  const { data: { session } } = await supa.auth.getSession();
+  if(session){ showSplash(); }
+  else { showLogin(); }
+}
+
+async function login(){
+  const email = document.getElementById('login_email').value.trim();
+  const pass  = document.getElementById('login_pass').value;
+  const errEl = document.getElementById('login_error');
+  const btn   = document.getElementById('login_btn');
+  errEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'Entrando…';
+  const { error } = await supa.auth.signInWithPassword({ email, password: pass });
+  if(error){
+    errEl.textContent = 'Correo o contraseña incorrectos.';
+    btn.disabled = false; btn.textContent = 'Iniciar sesión';
+  } else { showSplash(); }
+}
+
+async function logout(){
+  await supa.auth.signOut();
+  showLogin();
+}
+
+function showLogin(){
+  document.getElementById('screen-login').style.display = 'flex';
+  document.getElementById('screen-splash').style.display = 'none';
+  document.querySelector('header').style.display = 'none';
+  document.querySelector('nav').style.display    = 'none';
+  document.querySelector('main').style.display   = 'none';
+}
+
+function showSplash(){
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('screen-splash').style.display = 'flex';
+  document.querySelector('header').style.display = 'none';
+  document.querySelector('nav').style.display    = 'none';
+  document.querySelector('main').style.display   = 'none';
+  setTimeout(showApp, 2200);
+}
+
+function showApp(){
+  document.getElementById('screen-splash').style.display = 'none';
+  document.querySelector('header').style.display = '';
+  document.querySelector('nav').style.display    = '';
+  document.querySelector('main').style.display   = '';
+}
+
 // ── THEME ────────────────────────────────────────────
 function applyTheme(theme){
   document.documentElement.setAttribute('data-theme', theme);
@@ -586,6 +636,7 @@ loadConfig();
 loadEvento();
 loadFechaJornada();
 setDate();
+checkAuth();
 
 ['a_meat_boxes','a_meat_loose','a_bread_boxes','a_bread_loose'].forEach(function(id){
   var el = document.getElementById(id);
