@@ -195,6 +195,15 @@ input[type=number]:focus{border-color:var(--amber)}
 }
 .cfg-row input[type=text]:focus{border-color:var(--amber)}
 .cfg-row input[type=text]::placeholder{color:var(--faint)}
+.cfg-row input[type=date]{
+  padding:8px 10px;background:var(--input-bg);border:1px solid var(--border-l);
+  border-radius:7px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;
+  outline:none;transition:border-color .15s,background .3s;cursor:pointer;
+}
+.cfg-row input[type=date]:focus{border-color:var(--amber)}
+.cfg-row input[type=date]::-webkit-calendar-picker-indicator{
+  filter:invert(60%);cursor:pointer;
+}
 .info-note{
   background:var(--amber-d);border:1px solid var(--amber-b);border-radius:8px;
   padding:12px 14px;font-size:11px;color:var(--amber);font-family:'DM Mono',monospace;

@@ -263,6 +263,10 @@
         <label><div class="field-name">Nombre del evento</div><div class="field-hint">Aparece en el encabezado y se guarda en el historial</div></label>
         <input type="text" id="cfg_evento" placeholder="Ej: Feria de Primavera" oninput="saveEvento()">
       </div>
+      <div class="cfg-row">
+        <label><div class="field-name">Fecha de la jornada</div><div class="field-hint">Por defecto: hoy. Cámbiala para registrar días anteriores</div></label>
+        <input type="date" id="cfg_fecha_jornada" oninput="saveFechaJornada()">
+      </div>
     </div>
 
     <div class="card">

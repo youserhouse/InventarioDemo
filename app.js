@@ -68,19 +68,40 @@ function avgPrice(){ return (CFG.priceJam + CFG.priceEsp) / 2; }
 function loadEvento(){
   const ev = localStorage.getItem('ic_evento') || '';
   document.getElementById('cfg_evento').value = ev;
-  updateHeaderEvento(ev);
+  updateHeaderEvento();
 }
 
 function saveEvento(){
   const ev = document.getElementById('cfg_evento').value.trim();
   localStorage.setItem('ic_evento', ev);
-  updateHeaderEvento(ev);
+  updateHeaderEvento();
 }
 
-function updateHeaderEvento(ev){
+function updateHeaderEvento(){
+  const ev = localStorage.getItem('ic_evento') || '';
+  const fecha = localStorage.getItem('ic_fecha_jornada') || todayISO();
   const el = document.getElementById('headerEvento');
-  if(ev){ el.textContent = ev; el.style.display = ''; }
+  const fechaFmt = new Date(fecha+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase();
+  const parts = [ev, fechaFmt].filter(Boolean);
+  if(parts.length){ el.textContent = parts.join(' · '); el.style.display = ''; }
   else { el.textContent = ''; el.style.display = 'none'; }
+}
+
+// ── FECHA JORNADA ────────────────────────────────────
+function todayISO(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function loadFechaJornada(){
+  const f = localStorage.getItem('ic_fecha_jornada') || todayISO();
+  document.getElementById('cfg_fecha_jornada').value = f;
+  updateHeaderEvento();
+}
+
+function saveFechaJornada(){
+  const f = document.getElementById('cfg_fecha_jornada').value || todayISO();
+  localStorage.setItem('ic_fecha_jornada', f);
+  updateHeaderEvento();
 }
 
 // ── DATE ────────────────────────────────────────────
@@ -334,7 +355,7 @@ async function saveToSupabase(){
   const btn = document.getElementById('btnGuardarJornada');
   btn.textContent = '⏳ Guardando…'; btn.disabled = true;
 
-  const fecha = new Date().toISOString().slice(0,10);
+  const fecha = localStorage.getItem('ic_fecha_jornada') || todayISO();
   const evento = localStorage.getItem('ic_evento') || '';
 
   const { error } = await supa.from('registros').insert({
@@ -482,6 +503,9 @@ function resetDay(){
   if(!confirm('¿Iniciar un nuevo día? Se borrarán los datos de hoy.')) return;
   ['ic_apertura','ic_ventas','ic_cierre'].forEach(k=>localStorage.removeItem(k));
   cuadreData = null;
+  localStorage.setItem('ic_fecha_jornada', todayISO());
+  document.getElementById('cfg_fecha_jornada').value = todayISO();
+  updateHeaderEvento();
   ['a_meat_boxes','a_meat_loose','a_bread_boxes','a_bread_loose','a_sauce_rosa','a_sauce_white',
    'c_meat_boxes','c_meat_loose','c_bread_boxes','c_bread_loose','c_sauce_rosa','c_sauce_white',
    'v_card','v_cash'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
@@ -506,6 +530,7 @@ function resetDay(){
 loadTheme();
 loadConfig();
 loadEvento();
+loadFechaJornada();
 setDate();
 
 ['a_meat_boxes','a_meat_loose','a_bread_boxes','a_bread_loose'].forEach(function(id){
