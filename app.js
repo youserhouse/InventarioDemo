@@ -384,7 +384,7 @@ async function saveToSupabase(){
 async function loadHistorial(){
   const container = document.getElementById('hist_content');
   if(!supa){
-    container.innerHTML = `<div class="hist-error">Supabase no configurado.<br><span style="font-size:10px;opacity:.6">Añade tu URL y anon key en app.js (líneas 5-6) y vuelve a publicar.</span></div>`;
+    container.innerHTML = `<div class="hist-error">Supabase no configurado.</div>`;
     return;
   }
   container.innerHTML = '<div class="hist-loading">Cargando historial…</div>';
@@ -406,7 +406,7 @@ async function loadHistorial(){
     return;
   }
 
-  container.innerHTML = data.map((r,i) => {
+  container.innerHTML = data.map(r => {
     const Q = r.cuadre || {};
     const diff = Q.confirmed_diff || 0;
     const status = diff === 0 ? 'ok' : (Math.abs(diff) <= 2 ? 'warn' : 'bad');
@@ -416,33 +416,87 @@ async function loadHistorial(){
     const fechaFmt = r.fecha
       ? new Date(r.fecha+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase()
       : '—';
+    const eventoEsc = (r.evento||'').replace(/"/g,'&quot;');
     return `
-      <div class="hist-item">
-        <div class="hist-item-header" onclick="toggleHistDetail(this)">
-          <div class="hist-item-left">
-            <div class="hist-fecha">${fechaFmt}</div>
-            <div class="hist-evento">${r.evento || '<span style="opacity:.4">Sin nombre</span>'}</div>
+      <div class="hist-item" data-id="${r.id}">
+        <div class="hist-item-header">
+          <div class="hist-item-left" onclick="toggleHistDetail(this.closest('.hist-item'))">
+            <div class="hist-fecha" id="hf-${r.id}">${fechaFmt}</div>
+            <div class="hist-evento" id="he-${r.id}">${r.evento || '<span style="opacity:.4">Sin nombre</span>'}</div>
           </div>
           <div class="hist-item-right">
             <div class="hist-kpi"><span class="hist-kpi-val">${total}</span><span class="hist-kpi-label">recaudado</span></div>
             <div class="hist-kpi"><span class="hist-kpi-val">${burgers}</span><span class="hist-kpi-label">burgers</span></div>
             <div class="badge ${status}">${statusLabel}</div>
-            <span class="hist-chevron">▸</span>
+            <button class="hist-btn-edit" onclick="startEditRegistro('${r.id}','${r.fecha||''}','${eventoEsc}')" title="Editar fecha/evento">✏️</button>
+            <button class="hist-btn-del" onclick="deleteRegistro('${r.id}',this)" title="Eliminar">🗑</button>
+            <span class="hist-chevron" onclick="toggleHistDetail(this.closest('.hist-item'))">▸</span>
           </div>
         </div>
-        <div class="hist-detail" style="display:none">
+        <div class="hist-edit-form" id="hef-${r.id}" style="display:none">
+          <div class="hist-edit-row">
+            <label>Fecha</label>
+            <input type="date" id="hed-${r.id}" value="${r.fecha||''}">
+          </div>
+          <div class="hist-edit-row">
+            <label>Evento</label>
+            <input type="text" id="hee-${r.id}" value="${r.evento||''}" placeholder="Nombre del evento">
+          </div>
+          <div class="hist-edit-actions">
+            <button class="hist-btn-save" onclick="saveEditRegistro('${r.id}')">Guardar</button>
+            <button class="hist-btn-cancel" onclick="cancelEditRegistro('${r.id}')">Cancelar</button>
+          </div>
+        </div>
+        <div class="hist-detail" id="hdet-${r.id}" style="display:none">
           ${buildHistDetail(r)}
         </div>
       </div>`;
   }).join('');
 }
 
-function toggleHistDetail(header){
-  const detail = header.nextElementSibling;
-  const chevron = header.querySelector('.hist-chevron');
+function toggleHistDetail(item){
+  const detail = item.querySelector('.hist-detail');
+  const chevron = item.querySelector('.hist-chevron');
   const open = detail.style.display !== 'none';
   detail.style.display = open ? 'none' : 'block';
   chevron.textContent = open ? '▸' : '▾';
+}
+
+function startEditRegistro(id, fecha, evento){
+  document.getElementById('hef-'+id).style.display = 'block';
+  document.getElementById('hed-'+id).value = fecha;
+  document.getElementById('hee-'+id).value = evento;
+}
+
+function cancelEditRegistro(id){
+  document.getElementById('hef-'+id).style.display = 'none';
+}
+
+async function saveEditRegistro(id){
+  const fecha = document.getElementById('hed-'+id).value;
+  const evento = document.getElementById('hee-'+id).value.trim();
+  if(!fecha){ alert('La fecha no puede estar vacía.'); return; }
+
+  const { error } = await supa.from('registros').update({ fecha, evento }).eq('id', id);
+  if(error){ alert('Error al guardar: '+error.message); return; }
+
+  // Actualizar la vista sin recargar todo
+  const fechaFmt = new Date(fecha+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+  document.getElementById('hf-'+id).textContent = fechaFmt;
+  document.getElementById('he-'+id).innerHTML = evento || '<span style="opacity:.4">Sin nombre</span>';
+  document.getElementById('hef-'+id).style.display = 'none';
+}
+
+async function deleteRegistro(id, btn){
+  if(!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
+  btn.textContent = '⏳'; btn.disabled = true;
+  const { error } = await supa.from('registros').delete().eq('id', id);
+  if(error){ alert('Error al eliminar: '+error.message); btn.textContent='🗑'; btn.disabled=false; return; }
+  document.querySelector(`.hist-item[data-id="${id}"]`).remove();
+  const container = document.getElementById('hist_content');
+  if(!container.querySelector('.hist-item')){
+    container.innerHTML = '<div class="hist-empty">Todavía no hay jornadas guardadas.</div>';
+  }
 }
 
 function buildHistDetail(r){

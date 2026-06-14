@@ -275,7 +275,37 @@ input[type=number]:focus{border-color:var(--amber)}
 .hist-kpi{display:flex;flex-direction:column;align-items:center;gap:2px}
 .hist-kpi-val{font-family:'DM Mono',monospace;font-size:14px;font-weight:500}
 .hist-kpi-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
-.hist-chevron{font-family:'DM Mono',monospace;font-size:14px;color:var(--muted);transition:transform .15s;flex-shrink:0}
+.hist-chevron{font-family:'DM Mono',monospace;font-size:14px;color:var(--muted);transition:transform .15s;flex-shrink:0;cursor:pointer}
+.hist-btn-edit,.hist-btn-del{
+  background:none;border:none;cursor:pointer;font-size:15px;padding:4px;
+  border-radius:6px;transition:background .15s;flex-shrink:0;line-height:1;
+}
+.hist-btn-edit:hover{background:var(--amber-d)}
+.hist-btn-del:hover{background:var(--red-d)}
+.hist-edit-form{
+  border-top:1px solid var(--border);padding:14px 18px;background:var(--surface);
+  display:flex;flex-direction:column;gap:10px;
+}
+.hist-edit-row{display:flex;align-items:center;gap:10px}
+.hist-edit-row label{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);width:50px;flex-shrink:0}
+.hist-edit-row input[type=date],.hist-edit-row input[type=text]{
+  flex:1;padding:7px 10px;background:var(--input-bg);border:1px solid var(--border-l);
+  border-radius:7px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;
+  outline:none;transition:border-color .15s;
+}
+.hist-edit-row input:focus{border-color:var(--amber)}
+.hist-edit-actions{display:flex;gap:8px}
+.hist-btn-save{
+  flex:1;padding:8px;background:var(--green);color:#000;border:none;border-radius:7px;
+  cursor:pointer;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;transition:opacity .15s;
+}
+.hist-btn-save:hover{opacity:.85}
+.hist-btn-cancel{
+  flex:1;padding:8px;background:transparent;color:var(--muted);
+  border:1px solid var(--border-l);border-radius:7px;cursor:pointer;
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;transition:all .15s;
+}
+.hist-btn-cancel:hover{border-color:var(--muted);color:var(--text)}
 .hist-detail{
   border-top:1px solid var(--border);padding:16px 18px;
   background:var(--surface);
