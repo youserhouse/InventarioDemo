@@ -2,12 +2,12 @@
 // IMPORTANTE: sustituye estos valores con los de tu proyecto
 // Firebase Console → ⚙ Configuración del proyecto → General → tus apps → SDK setup
 const firebaseConfig = {
-  apiKey: 'TU_API_KEY',
-  authDomain: 'TU_PROYECTO.firebaseapp.com',
-  projectId: 'TU_PROYECTO',
-  storageBucket: 'TU_PROYECTO.appspot.com',
-  messagingSenderId: 'TU_SENDER_ID',
-  appId: 'TU_APP_ID',
+  apiKey: 'AIzaSyAP9tzWgZAkiCSQGSnyyxGzwbi1S0Nr84s',
+  authDomain: 'inventario-demo-eb83c.firebaseapp.com',
+  projectId: 'inventario-demo-eb83c',
+  storageBucket: 'inventario-demo-eb83c.firebasestorage.app',
+  messagingSenderId: '717820879033',
+  appId: '1:717820879033:web:bacbe331b4c2df7a993b68',
 };
 
 let auth = null, db = null;
