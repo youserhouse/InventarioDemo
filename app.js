@@ -1,21 +1,31 @@
-// ── SUPABASE ─────────────────────────────────────────
-// IMPORTANTE: sustituye estas dos líneas con los valores de tu proyecto
-// supabase.com → Settings → API → Project URL + anon public key
-const SUPA_URL = 'https://rjwylmoclygjchjypdpu.supabase.co';
-const SUPA_KEY = 'sb_publishable_46KfxJ93pHFFbxwQ0dWmOg_E_A1KkZ1';
+// ── FIREBASE ─────────────────────────────────────────
+// IMPORTANTE: sustituye estos valores con los de tu proyecto
+// Firebase Console → ⚙ Configuración del proyecto → General → tus apps → SDK setup
+const firebaseConfig = {
+  apiKey: 'AIzaSyAP9tzWgZAkiCSQGSnyyxGzwbi1S0Nr84s',
+  authDomain: 'inventario-demo-eb83c.firebaseapp.com',
+  projectId: 'inventario-demo-eb83c',
+  storageBucket: 'inventario-demo-eb83c.firebasestorage.app',
+  messagingSenderId: '717820879033',
+  appId: '1:717820879033:web:bacbe331b4c2df7a993b68',
+};
 
-let supa = null;
+let auth = null, db = null;
 try {
-  if(typeof supabase !== 'undefined' && SUPA_URL !== 'TU_SUPABASE_URL'){
-    supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+  if(typeof firebase !== 'undefined' && firebaseConfig.apiKey !== 'TU_API_KEY'){
+    firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db   = firebase.firestore();
   }
-} catch(e){ console.warn('Supabase no inicializado:', e); }
+} catch(e){ console.warn('Firebase no inicializado:', e); }
 
 // ── AUTH ─────────────────────────────────────────────
-async function checkAuth(){
-  const { data: { session } } = await supa.auth.getSession();
-  if(session){ showSplash(); }
-  else { showLogin(); }
+function checkAuth(){
+  if(!auth){ showLogin(); return; }
+  auth.onAuthStateChanged(user => {
+    if(user){ showSplash(); }
+    else { showLogin(); }
+  });
 }
 
 async function login(){
@@ -25,16 +35,16 @@ async function login(){
   const btn   = document.getElementById('login_btn');
   errEl.textContent = '';
   btn.disabled = true; btn.textContent = 'Entrando…';
-  const { error } = await supa.auth.signInWithPassword({ email, password: pass });
-  if(error){
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch(error){
     errEl.textContent = 'Correo o contraseña incorrectos.';
     btn.disabled = false; btn.textContent = 'Iniciar sesión';
-  } else { showSplash(); }
+  }
 }
 
 async function logout(){
-  await supa.auth.signOut();
-  showLogin();
+  await auth.signOut();
 }
 
 function showLogin(){
@@ -288,7 +298,7 @@ function buildCuadre(){
   const rosaDiff  = (A.sauce_rosa||0)  - (C.sauce_rosa||0);
   const whiteDiff = (A.sauce_white||0) - (C.sauce_white||0);
 
-  // Guardar datos calculados para Supabase
+  // Guardar datos calculados para Firebase
   cuadreData = {
     burgers_by_money: burgersByMoneyR,
     complete_burgers: completeBurgers,
@@ -395,11 +405,11 @@ function buildCuadre(){
   }
 }
 
-// ── GUARDAR EN SUPABASE ──────────────────────────────
-async function saveToSupabase(){
+// ── GUARDAR EN FIREBASE ──────────────────────────────
+async function saveToFirebase(){
   if(!cuadreData){ alert('Primero completa el cuadre del día.'); return; }
-  if(!supa){
-    alert('Supabase no está configurado. Añade tu URL y anon key en app.js (líneas 5-6).');
+  if(!db){
+    alert('Firebase no está configurado. Añade tu firebaseConfig en app.js.');
     return;
   }
   const btn = document.getElementById('btnGuardarJornada');
@@ -408,53 +418,55 @@ async function saveToSupabase(){
   const fecha = localStorage.getItem('ic_fecha_jornada') || todayISO();
   const evento = localStorage.getItem('ic_evento') || '';
 
-  const { error } = await supa.from('registros').insert({
-    fecha,
-    evento,
-    apertura: JSON.parse(localStorage.getItem('ic_apertura')||'{}'),
-    ventas:   JSON.parse(localStorage.getItem('ic_ventas')||'{}'),
-    cierre:   JSON.parse(localStorage.getItem('ic_cierre')||'{}'),
-    cuadre:   cuadreData,
-    config:   {...CFG},
-  });
-
-  if(error){
-    btn.textContent = '❌ Error — reintentar';
-    btn.disabled = false;
-    btn.className = 'btn-save-db btn-save-db--error';
-    console.error('Supabase error:', error);
-  } else {
+  try {
+    await db.collection('registros').add({
+      fecha,
+      evento,
+      apertura: JSON.parse(localStorage.getItem('ic_apertura')||'{}'),
+      ventas:   JSON.parse(localStorage.getItem('ic_ventas')||'{}'),
+      cierre:   JSON.parse(localStorage.getItem('ic_cierre')||'{}'),
+      cuadre:   cuadreData,
+      config:   {...CFG},
+      created_at: firebase.firestore.FieldValue.serverTimestamp(),
+    });
     btn.textContent = '✓ Jornada guardada';
     btn.disabled = true;
     btn.className = 'btn-save-db btn-save-db--saved';
+  } catch(error){
+    btn.textContent = '❌ Error — reintentar';
+    btn.disabled = false;
+    btn.className = 'btn-save-db btn-save-db--error';
+    console.error('Firebase error:', error);
   }
 }
 
 // ── HISTORIAL ────────────────────────────────────────
 async function loadHistorial(){
   const container = document.getElementById('hist_content');
-  if(!supa){
-    container.innerHTML = `<div class="hist-error">Supabase no configurado.</div>`;
+  if(!db){
+    container.innerHTML = `<div class="hist-error">Firebase no configurado.</div>`;
     return;
   }
   container.innerHTML = '<div class="hist-loading">Cargando historial…</div>';
 
-  const { data, error } = await supa
-    .from('registros')
-    .select('*')
-    .order('fecha', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(60);
-
-  if(error){
+  let snap;
+  try {
+    snap = await db.collection('registros')
+      .orderBy('fecha', 'desc')
+      .orderBy('created_at', 'desc')
+      .limit(60)
+      .get();
+  } catch(error){
     container.innerHTML = `<div class="hist-error">No se pudo cargar el historial.<br><span style="font-size:10px;opacity:.6">${error.message}</span></div>`;
     return;
   }
 
-  if(!data || data.length === 0){
+  if(snap.empty){
     container.innerHTML = '<div class="hist-empty">Todavía no hay jornadas guardadas.<br>Completa el cuadre y pulsa "Guardar jornada".</div>';
     return;
   }
+
+  const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
   container.innerHTML = data.map(r => {
     const Q = r.cuadre || {};
@@ -527,8 +539,9 @@ async function saveEditRegistro(id){
   const evento = document.getElementById('hee-'+id).value.trim();
   if(!fecha){ alert('La fecha no puede estar vacía.'); return; }
 
-  const { error } = await supa.from('registros').update({ fecha, evento }).eq('id', id);
-  if(error){ alert('Error al guardar: '+error.message); return; }
+  try {
+    await db.collection('registros').doc(id).update({ fecha, evento });
+  } catch(error){ alert('Error al guardar: '+error.message); return; }
 
   // Actualizar la vista sin recargar todo
   const fechaFmt = new Date(fecha+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
@@ -540,8 +553,9 @@ async function saveEditRegistro(id){
 async function deleteRegistro(id, btn){
   if(!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
   btn.textContent = '⏳'; btn.disabled = true;
-  const { error } = await supa.from('registros').delete().eq('id', id);
-  if(error){ alert('Error al eliminar: '+error.message); btn.textContent='🗑'; btn.disabled=false; return; }
+  try {
+    await db.collection('registros').doc(id).delete();
+  } catch(error){ alert('Error al eliminar: '+error.message); btn.textContent='🗑'; btn.disabled=false; return; }
   document.querySelector(`.hist-item[data-id="${id}"]`).remove();
   const container = document.getElementById('hist_content');
   if(!container.querySelector('.hist-item')){
