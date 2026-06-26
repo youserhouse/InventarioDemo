@@ -6,7 +6,9 @@
 <title>La Demo — Inventario</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -272,7 +274,7 @@
       </div>
     </div>
 
-    <button class="btn-save-db" id="btnGuardarJornada" onclick="saveToSupabase()">💾 Guardar jornada en historial</button>
+    <button class="btn-save-db" id="btnGuardarJornada" onclick="saveToFirebase()">💾 Guardar jornada en historial</button>
     <button class="btn-sec" onclick="resetDay()">🔄 Nuevo día</button>
   </div>
 
